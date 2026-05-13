@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deepseek-cursor-proxy-tray"
+version = "0.1.0"
+description = "Windows system-tray supervisor for the deepseek-cursor-proxy: lifecycle management, health watchdog, error states, and GUI configuration of ngrok authtoken / proxy settings / reasoning cache."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    { name = "tangf" },
+]
+keywords = [
+    "cursor",
+    "deepseek",
+    "proxy",
+    "ngrok",
+    "system-tray",
+    "windows",
+    "watchdog",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Win32 (MS Windows)",
+    "Intended Audience :: Developers",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: Proxy Servers",
+    "Topic :: Software Development",
+    "Topic :: Utilities",
+]
+dependencies = [
+    # Upstream proxy CLI - pulled from GitHub (not on PyPI).
+    # Pin to a known-good commit to avoid surprises; bump intentionally.
+    "deepseek-cursor-proxy @ git+https://github.com/yxlao/deepseek-cursor-proxy.git@ea3da01",
+    "pystray>=0.19.5",
+    "Pillow>=10.0",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=24.0",
+    "ruff>=0.3",
+]
+
+[project.urls]
+"Upstream proxy" = "https://github.com/yxlao/deepseek-cursor-proxy"
+
+[project.scripts]
+# Console launcher (rare; usually started via pythonw -m dscp_tray).
+dscp-tray = "dscp_tray.tray:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["dscp_tray*"]
+
+[tool.black]
+target-version = ["py310"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100

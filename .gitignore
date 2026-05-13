@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# uv / pip lock files - we don't pin transitively for a downstream-only repo;
+# the only direct constraint is in pyproject.toml.
+uv.lock
+
+# Build / dist
+build/
+dist/
+*.whl
+
+# Editor / OS junk
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Local user state (these live in ~/.deepseek-cursor-proxy/ anyway, but be
+# safe in case anyone symlinks or copies them next to the project)
+status.json
+*.log
+*.sqlite3
+*.sqlite3-journal
+config.yaml
+ngrok.yml
+
+# Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Ruff / mypy / black caches
+.ruff_cache/
+.mypy_cache/
