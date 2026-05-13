@@ -4,25 +4,6 @@ Windows system-tray supervisor for [`yxlao/deepseek-cursor-proxy`](https://githu
 
 Adds **zero-console-flicker autostart**, a **state-machine watchdog with labeled error states**, and **GUI windows** for editing `config.yaml`, configuring the ngrok authtoken, and managing the reasoning cache — so you stop hand-editing YAML and running `--clear-reasoning-cache` from the terminal.
 
-![tray menu and running icon](images/main.png)
-
-## Why this exists
-
-The [upstream proxy](https://github.com/yxlao/deepseek-cursor-proxy) is a great CLI, but running it as a long-lived service on Windows has friction:
-
-- `powershell.exe ... -WindowStyle Hidden` from Task Scheduler **still flashes a console window** at every run/restart.
-- `Stop-Process -Force` to restart the proxy hard-kills ngrok before its tunnel session can be released, occasionally causing `provider error` on the next start.
-- When the proxy hangs or crashes, you find out from Cursor failing, not from the OS.
-- `ngrok authtoken`, `config.yaml`, and the `--clear-reasoning-cache` CLI flag all require hand-editing or terminal incantations.
-
-This repo solves all of the above. The tray app:
-
-- Launches via `pythonw.exe -m dscp_tray` (no console allocation — **truly silent autostart**)
-- Owns the proxy subprocess and `taskkill /T /F` the whole tree (proxy + ngrok) on stop, so ngrok cloud sessions release cleanly
-- Probes `/healthz` every 60 s, requires 3 consecutive failures before restarting, and waits 8 s between stop and start to avoid session collisions
-- Distinguishes 5 lifecycle states by icon color and surfaces 7 distinct error labels
-- Exposes config, authtoken, and cache management as native tkinter dialogs (see screenshots below)
-
 ## Quick install
 
 Grab `dscp-tray-setup-<version>.exe` from the [latest release](https://github.com/xhml-tangf/deepseek-cursor-proxy-tray/releases/latest) and double-click it.
