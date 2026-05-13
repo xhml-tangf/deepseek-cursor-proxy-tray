@@ -57,23 +57,36 @@ import pystray
 # ----------------------------- Configuration -----------------------------
 
 
-def _find_proxy_exe() -> Path | None:
-    """Locate the upstream `deepseek-cursor-proxy.exe`.
+def _resolve_proxy_command() -> tuple[list[str] | None, str]:
+    """Return the argv prefix to launch the upstream proxy, plus a label.
 
-    Order:
-      1. Same Scripts/ dir as the running Python (covers `pythonw -m dscp_tray`
-         and Task Scheduler launches from the project venv).
-      2. Anywhere on PATH (covers globally installed proxy).
-    Returns None when nothing is found.
+    Strategy (in order):
+      1. `<sys.executable>\\..\\deepseek-cursor-proxy.exe` (regular venv layout)
+      2. `deepseek-cursor-proxy` on PATH
+      3. `<current python> -m deepseek_cursor_proxy` (works in embeddable
+         Python where pip doesn't generate entry-point shims)
+
+    Returns ([argv...], "human label") or (None, reason) when nothing works.
     """
     here = Path(sys.executable).parent
     candidate = here / "deepseek-cursor-proxy.exe"
     if candidate.exists():
-        return candidate
-    found = shutil.which("deepseek-cursor-proxy")
-    if found:
-        return Path(found)
-    return None
+        return [str(candidate)], str(candidate)
+    on_path = shutil.which("deepseek-cursor-proxy")
+    if on_path:
+        return [on_path], on_path
+    try:
+        import importlib.util
+        if importlib.util.find_spec("deepseek_cursor_proxy") is not None:
+            python_exe = sys.executable
+            # pythonw.exe also works for `-m <pkg>`; the upstream main()
+            # doesn't require a console.
+            return [python_exe, "-m", "deepseek_cursor_proxy"], (
+                f"{python_exe} -m deepseek_cursor_proxy"
+            )
+    except Exception:
+        pass
+    return None, "no exe / no module"
 
 
 # Upstream proxy's own data dir; we share it so tray + proxy + CLI agree on
@@ -1369,10 +1382,11 @@ class ProxyTray:
             self._set_state(STATE_STARTING)
             log.info("start_proxy reason=%s", reason)
 
-            proxy_exe = _find_proxy_exe()
-            if proxy_exe is None:
+            proxy_argv, proxy_label = _resolve_proxy_command()
+            if proxy_argv is None:
                 log.error(
-                    "proxy exe missing: not in %s and not on PATH",
+                    "proxy missing: no exe in %s, not on PATH, "
+                    "and deepseek_cursor_proxy module not importable",
                     Path(sys.executable).parent,
                 )
                 self._enter_error(ERROR_EXE_MISSING)
@@ -1391,8 +1405,9 @@ class ProxyTray:
             try:
                 out_fh = open(log_file, "wb")
                 err_fh = open(err_file, "wb")
+                log.info("spawning proxy: %s", proxy_label)
                 proc = subprocess.Popen(
-                    [str(proxy_exe)],
+                    proxy_argv,
                     cwd=str(DATA_DIR),
                     stdout=out_fh,
                     stderr=err_fh,

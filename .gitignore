@@ -21,6 +21,12 @@ build/
 dist/
 *.whl
 
+# Inno Setup installer build artifacts
+installer/payload/
+installer/upstream-clone/
+installer/out/
+installer/python-embed*.zip
+
 # Editor / OS junk
 .vscode/
 .idea/

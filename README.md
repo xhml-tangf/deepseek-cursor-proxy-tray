@@ -55,24 +55,44 @@ The upstream proxy itself is fetched automatically from GitHub as a Python depen
 
 ## Installation
 
-```powershell
-# 1. Clone
-git clone https://github.com/<you>/deepseek-cursor-proxy-tray.git
-cd deepseek-cursor-proxy-tray
+### Recommended: download the installer
 
-# 2. Create venv and install (uv pulls the upstream proxy from GitHub)
-uv sync
+Grab `dscp-tray-setup-<version>.exe` from the [latest release](https://github.com/xhml-tangf/deepseek-cursor-proxy-tray/releases/latest) and double-click it.
 
-# 3. Register logon autostart (no admin required)
-.\scripts\install-autostart.ps1
-
-# 4. Either log out + back in, or trigger the task now:
-Start-ScheduledTask -TaskName 'DeepSeekCursorProxy'
-```
+- Per-user install, **no admin required**
+- Bundles a self-contained Python 3.12 (with tkinter); you don't need Python
+- Bundles both wheels (this project + the upstream proxy), so install is fully offline once downloaded
+- Optionally `winget install`s ngrok for you if missing
+- Registers Task Scheduler logon autostart via standard `Register-ScheduledTask`
+- Clean uninstall via Add/Remove Programs
 
 On first launch, if you haven't configured the ngrok authtoken yet, the tray will land in `STATE_ERROR` with label `authtoken-missing` and **auto-open the config window** so you can paste your token.
 
 Once running, right-click the tray icon → **Copy Public URL**, paste into Cursor's custom model settings as the Base URL.
+
+### From source (for development)
+
+```powershell
+git clone https://github.com/xhml-tangf/deepseek-cursor-proxy-tray.git
+cd deepseek-cursor-proxy-tray
+
+# Create venv and install (uv pulls the upstream proxy from GitHub)
+uv sync
+
+# Manually launch the tray (it owns the proxy subprocess and registers
+# itself nowhere - useful for trying changes without touching Task Scheduler)
+.\scripts\start-tray.ps1
+```
+
+### Building the installer yourself
+
+Requires Inno Setup 6 (`winget install JRSoftware.InnoSetup`) and a normal
+Python 3.12.x install on PATH (used to harvest tkinter for the embeddable).
+
+```powershell
+.\installer\build-installer.ps1
+# Result: installer\out\dscp-tray-setup-0.1.0.exe (~20 MB)
+```
 
 ## State machine
 
